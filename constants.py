@@ -25,12 +25,12 @@ BRIGHT = {
 
 # Speed values are in milliseconds (ms). This keeps timing consistent even if FPS fluctuates.
 DIFFICULTY_CONFIG = {
-    "Easy": {"colors": ["red", "green", "blue", "yellow"], "grid": (2, 2), "speed": (400, 200)},
-    "Medium": {"colors": ["red", "green", "blue", "yellow", "purple", "cyan"], "grid": (3, 2), "speed": (330, 170)},
-    "Hard": {"colors": ["red", "green", "blue", "yellow", "purple", "cyan", "orange", "white"], "grid": (4, 2), "speed": (280, 150)}
+    "Easy": {"colors": ["red", "green", "blue", "yellow"], "grid": (2, 2), "speed": (1200, 400)},
+    "Medium": {"colors": ["red", "green", "blue", "yellow", "purple", "cyan"], "grid": (3, 2), "speed": (1000, 350)},
+    "Hard": {"colors": ["red", "green", "blue", "yellow", "purple", "cyan", "orange", "white"], "grid": (4, 2), "speed": (800, 300)}
 }
 
-MAX_STAGES = 7
+MAX_STAGES = 10
 
 # Initialize Pygame components
 pygame.init()

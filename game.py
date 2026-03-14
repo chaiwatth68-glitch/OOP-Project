@@ -26,19 +26,30 @@ class SimonGame:
 
         # Create buttons (with spacing and centered grid)
         self.buttons = []
-        margin = 32
-        available_width = WIDTH - margin * (self.grid_cols + 1)
-        available_height = (HEIGHT - 240) - margin * (self.grid_rows + 1)
-        button_width = available_width // self.grid_cols
-        button_height = available_height // self.grid_rows
-        grid_top = 180
-
+        padding = 30
+        grid_start_y = 210
+        available_w = WIDTH - (padding * (self.grid_cols + 1))
+        available_h = HEIGHT - grid_start_y - 120 - (padding * (self.grid_rows + 1))
+        
+        # Calculate size that fits both width and height
+        size_w = available_w // self.grid_cols
+        size_h = available_h // self.grid_rows
+        button_size = min(size_w, size_h)
+        
+        # Center horizontally
+        total_grid_w = (button_size * self.grid_cols) + (padding * (self.grid_cols - 1))
+        start_x = (WIDTH - total_grid_w) // 2
+        
+        # Center vertically in the available area
+        total_grid_h = (button_size * self.grid_rows) + (padding * (self.grid_rows - 1))
+        start_y = grid_start_y + (available_h - total_grid_h) // 2
+        
         for i, color in enumerate(self.colors):
             row = i // self.grid_cols
             col = i % self.grid_cols
-            x = margin + col * (button_width + margin)
-            y = grid_top + margin + row * (button_height + margin)
-            rect = pygame.Rect(x, y, button_width, button_height)
+            x = start_x + col * (button_size + padding)
+            y = start_y + row * (button_size + padding)
+            rect = pygame.Rect(x, y, button_size, button_size)
             self.buttons.append(ColorButton(rect, color))
 
         self._start_new_round()
@@ -50,33 +61,82 @@ class SimonGame:
         self.state = "showing"
         self.show_index = 0
         # Add a short delay before AI starts showing the sequence
-        self.next_time = pygame.time.get_ticks() + 800  # 0.8 second delay
+        self.next_time = pygame.time.get_ticks() + 400  # 0.4 second delay
         self.highlight_end = 0
         self.wait_delay = 0
 
-    def update(self, mouse_pos, event):
+    def update(self, mouse_pos, events):
         for button in self.buttons:
             button.update_hover(mouse_pos)
+
+        # Handle Win/Lose Popups
+        if self.state in ["won", "failed"]:
+            for event in events:
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    center_y = HEIGHT // 2
+                    is_win = self.state == "won"
+                    btn_w, btn_h = 240, 55
+                    
+                    # Setup buttons rects
+                    if is_win:
+                        has_next = self.difficulty != "Hard"
+                        y_start = center_y + (0 if has_next else 40)
+                        next_r = pygame.Rect(WIDTH//2-btn_w//2, y_start, btn_w, btn_h)
+                        retry_r = pygame.Rect(WIDTH//2-btn_w//2, y_start + (70 if has_next else 0), btn_w, btn_h)
+                        menu_r = pygame.Rect(WIDTH//2-btn_w//2, y_start + (140 if has_next else 70), btn_w, btn_h)
+                        
+                        if has_next and next_r.collidepoint(event.pos): return "next"
+                        if retry_r.collidepoint(event.pos): return "retry"
+                        if menu_r.collidepoint(event.pos): return "menu"
+                    else:
+                        retry_r = pygame.Rect(WIDTH//2-btn_w//2, center_y + 20, btn_w, btn_h)
+                        menu_r = pygame.Rect(WIDTH//2-btn_w//2, center_y + 90, btn_w, btn_h)
+                        if retry_r.collidepoint(event.pos): return "retry"
+                        if menu_r.collidepoint(event.pos): return "menu"
+            return None
 
         # Show hover state only during player turn (to avoid confusion during AI turn)
         if self.state == "waiting":
             for button in self.buttons:
-                button.set_highlight(False, hover=button.is_hovered())
+                if button._press_t == 0:
+                    button.set_highlight(False, hover=button.is_hovered())
         else:
             for button in self.buttons:
-                button.set_highlight(False, hover=False)
+                if button._press_t == 0:
+                    button.set_highlight(False, hover=False)
 
         # Player input
-        if self.state == "waiting" and event and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            for button in self.buttons:
-                if button.is_clicked(event):
-                    self.sound_manager.play_player()
-                    self.player_input.append(button.color_name)
-                    button.set_highlight(True)
-                    button.press()
-                    self.next_time = pygame.time.get_ticks() + self.player_delay_ms
-                    self.state = "checking"
-                    break
+        if self.state in ["waiting", "showing"]:
+            clicked = False
+            for event in events:
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    for button in self.buttons:
+                        if button.is_clicked(event):
+                            self.sound_manager.play_player()
+                            self.player_input.append(button.color_name)
+                            button.set_highlight(True)
+                            button.press()
+                            
+                            idx = len(self.player_input) - 1
+                            if idx < len(self.sequence):
+                                if self.player_input[idx] != self.sequence[idx]:
+                                    self.state = "failed"
+                                    # Clear highlights
+                                    for b in self.buttons: b.set_highlight(False)
+                                    clicked = True
+                                    break
+                            
+                            if len(self.player_input) == len(self.sequence):
+                                if self.stage >= MAX_STAGES:
+                                    self.state = "won"
+                                else:
+                                    self._start_new_round()
+                                clicked = True
+                                break
+                            clicked = True
+                            break
+                    if clicked:
+                        break
 
         # AI showing sequence
         if self.state == "showing":
@@ -85,7 +145,11 @@ class SimonGame:
             # Clear highlight shortly after it appears so it doesn't stay on indefinitely
             if now >= self.highlight_end:
                 for button in self.buttons:
-                    button.set_highlight(False)
+                    if button._press_t == 0:
+                        button.set_highlight(False)
+                if self.show_index >= len(self.sequence):
+                    self.wait_delay = now
+                    self.state = "waiting"
 
             if now >= self.next_time:
                 if self.show_index < len(self.sequence):
@@ -97,56 +161,16 @@ class SimonGame:
                             break
                     self.show_index += 1
                     self.next_time = now + self.ai_delay_ms
-                    self.highlight_end = now + (self.ai_delay_ms // 2)
+                    self.highlight_end = now + self.ai_delay_ms - 150
                 else:
-                    # Add delay before switching to player turn
-                    self.wait_delay = now + 600  # 0.6 second delay
+                    # No delay before switching to player turn
+                    self.wait_delay = now  # Immediate start
                     self.state = "waiting"
 
-        # Check player input timing
-        elif self.state == "checking":
-            now = pygame.time.get_ticks()
-            if now >= self.next_time:
-                for button in self.buttons:
-                    button.set_highlight(False)
-                if len(self.player_input) == len(self.sequence):
-                    if self.player_input == self.sequence:
-                        if self.stage >= MAX_STAGES:
-                            self.state = "won"
-                        else:
-                            self._start_new_round()
-                    else:
-                        self.state = "failed"
-                else:
-                    self.state = "waiting"
 
-    def draw(self, surface):
-        # Draw title and status
-        title = font_main.render("SIMON SAYS", True, HIGHLIGHT_COLOR)
-        surface.blit(title, (WIDTH//2 - title.get_width()//2, 20))
+        return None
 
-        status = font_small.render(f"Stage: {self.stage}/{MAX_STAGES}  |  {self.difficulty}", True, TEXT_COLOR)
-        surface.blit(status, (WIDTH//2 - status.get_width()//2, 70))
 
-        # Draw buttons
-        for button in self.buttons:
-            button.draw(surface)
-
-        # Prompt text
-        prompt_text = ""
-        now = pygame.time.get_ticks()
-        if self.state == "waiting" and now >= self.wait_delay:
-            prompt_text = "Your turn!"
-        elif self.state == "showing":
-            prompt_text = "Watch carefully..."
-        elif self.state == "won":
-            prompt_text = "You win!"
-        elif self.state == "failed":
-            prompt_text = "Wrong move!"
-
-        if prompt_text:
-            prompt = font_small.render(prompt_text, True, HIGHLIGHT_COLOR if self.state == "waiting" else TEXT_COLOR)
-            surface.blit(prompt, (WIDTH//2 - prompt.get_width()//2, 120))
 
     def get_state(self):
         return self.state
