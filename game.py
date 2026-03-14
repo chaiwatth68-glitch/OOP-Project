@@ -106,7 +106,7 @@ class SimonGame:
                     button.set_highlight(False, hover=False)
 
         # Player input
-        if self.state in ["waiting", "showing"]:
+        if self.state == "waiting":
             clicked = False
             for event in events:
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -161,7 +161,7 @@ class SimonGame:
                             break
                     self.show_index += 1
                     self.next_time = now + self.ai_delay_ms
-                    self.highlight_end = now + self.ai_delay_ms - 150
+                    self.highlight_end = now + self.ai_delay_ms - 80
                 else:
                     # No delay before switching to player turn
                     self.wait_delay = now  # Immediate start
