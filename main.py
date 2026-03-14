@@ -19,6 +19,24 @@ MATCH_COLOR = (46, 204, 113)  # Emerald Green
 TEXT_COLOR = (255, 255, 255)
 ACCENT_COLOR = (255, 107, 107)# Coral Red
 
+# Game Colors
+COLORS = {
+    'red': (255, 0, 0),
+    'green': (0, 255, 0),
+    'yellow': (255, 255, 0),
+    'blue': (0, 0, 255),
+    'orange': (255, 165, 0),
+    'pink': (255, 192, 203),
+    'white': (255, 255, 255),
+    'light_purple': (221, 160, 221)
+}
+
+LEVEL_COLORS = {
+    'easy': ['red', 'green', 'yellow', 'blue'],
+    'medium': ['red', 'green', 'yellow', 'blue', 'orange', 'pink'],
+    'hard': ['red', 'green', 'yellow', 'blue', 'orange', 'pink', 'white', 'light_purple']
+}
+
 # Typography
 try:
     font_main = pygame.font.SysFont("Outfit", 32)
@@ -30,11 +48,23 @@ except:
     font_small = pygame.font.SysFont("Arial", 20)
 
 # Game Constants
-ROWS, COLS = 4, 4
 CARD_SIZE = 110
 MARGIN = 20
-GRID_OFFSET_X = (WIDTH - (COLS * (CARD_SIZE + MARGIN) - MARGIN)) // 2
-GRID_OFFSET_Y = 150
+
+def get_grid_geometry(level):
+    """Return (rows, cols, offset_x, offset_y) for the given difficulty."""
+    if level == 'easy':
+        rows, cols = 2, 2
+    elif level == 'medium':
+        rows, cols = 3, 4
+    else:
+        rows, cols = 4, 4
+
+    grid_width = cols * CARD_SIZE + (cols - 1) * MARGIN
+    grid_height = rows * CARD_SIZE + (rows - 1) * MARGIN
+    offset_x = (WIDTH - grid_width) // 2
+    offset_y = 150
+    return rows, cols, offset_x, offset_y
 
 # --- Classes ---
 class Card:
@@ -43,52 +73,46 @@ class Card:
         self.value = value
         self.is_flipped = False
         self.is_matched = False
+        self.is_visible = value is not None
         self.animation_progress = 0  # 0 to 1
         self.hovered = False
 
     def draw(self, surface):
-        # Determine color and scale based on state
-        color = CARD_BACK
+        if not self.is_visible:
+            return
+
+        # Determine display color
         if self.is_matched:
             color = MATCH_COLOR
         elif self.is_flipped:
-            color = CARD_FRONT
-        
-        # Draw shadow
-        shadow_rect = self.rect.copy()
-        shadow_rect.move_ip(4, 4)
-        pygame.draw.rect(surface, (5, 5, 10), shadow_rect, border_radius=15)
-
-        # Draw main card body
-        draw_rect = self.rect.copy()
-        if self.hovered and not self.is_matched and not self.is_flipped:
-            draw_rect.inflate_ip(4, 4)
-            pygame.draw.rect(surface, color, draw_rect, border_radius=15)
-            pygame.draw.rect(surface, HIGHLIGHT, draw_rect, 2, border_radius=15)
+            color = COLORS.get(self.value, CARD_FRONT)
         else:
-            pygame.draw.rect(surface, color, draw_rect, border_radius=15)
+            color = CARD_BACK
 
-        # Draw content if flipped or matched
-        if self.is_flipped or self.is_matched:
-            text_val = font_main.render(str(self.value), True, BG_COLOR if not self.is_matched else TEXT_COLOR)
-            text_rect = text_val.get_rect(center=self.rect.center)
-            surface.blit(text_val, text_rect)
+        # Draw card (simple rounded rectangle)
+        pygame.draw.rect(surface, color, self.rect, border_radius=20)
 
 # --- Game Logic ---
-def init_game():
-    values = list(range(1, (ROWS * COLS // 2) + 1)) * 2
+def init_game(level):
+    rows, cols, offset_x, offset_y = get_grid_geometry(level)
+
+    colors = LEVEL_COLORS[level]
+    values = colors * 2
+    total_cards = rows * cols
+    if len(values) < total_cards:
+        values += [None] * (total_cards - len(values))
     random.shuffle(values)
     
     cards = []
-    for r in range(ROWS):
-        for c in range(COLS):
-            x = GRID_OFFSET_X + c * (CARD_SIZE + MARGIN)
-            y = GRID_OFFSET_Y + r * (CARD_SIZE + MARGIN)
+    for r in range(rows):
+        for c in range(cols):
+            x = offset_x + c * (CARD_SIZE + MARGIN)
+            y = offset_y + r * (CARD_SIZE + MARGIN)
             cards.append(Card(x, y, values.pop()))
-    return cards
+    return cards, rows, cols
 
-def main():
-    cards = init_game()
+def main(level):
+    cards, rows, cols = init_game(level)
     selected = []
     waiting_timer = 0
     score = 0
@@ -110,7 +134,7 @@ def main():
             
             if event.type == pygame.MOUSEBUTTONDOWN and not waiting_timer and not game_over:
                 for card in cards:
-                    if card.rect.collidepoint(event.pos) and not card.is_flipped and not card.is_matched:
+                    if card.is_visible and card.rect.collidepoint(event.pos) and not card.is_flipped and not card.is_matched:
                         card.is_flipped = True
                         selected.append(card)
                         
@@ -122,7 +146,8 @@ def main():
                                 score += 10
                                 selected = []
                                 # Check Win Condition
-                                if all(c.is_matched for c in cards):
+                                visible_cards = [c for c in cards if c.is_visible]
+                                if all(c.is_matched for c in visible_cards):
                                     game_over = True
                             else:
                                 score = max(0, score - 2)
@@ -130,7 +155,7 @@ def main():
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_r and game_over:
-                    cards = init_game()
+                    cards, rows, cols = init_game(level)
                     score = 0
                     moves = 0
                     game_over = False
@@ -145,14 +170,14 @@ def main():
 
         # Hover effect
         for card in cards:
-            card.hovered = card.rect.collidepoint(mouse_pos)
+            card.hovered = card.is_visible and card.rect.collidepoint(mouse_pos)
 
         # --- Drawing ---
         # Draw Header
         title_surf = font_title.render("MEMORY MASTER", True, HIGHLIGHT)
         screen.blit(title_surf, (WIDTH//2 - title_surf.get_width()//2, 40))
         
-        info_text = f"Score: {score}   |   Moves: {moves}"
+        info_text = f"Score: {score}   |   Moves: {moves}   |   Level: {level.capitalize()}"
         info_surf = font_main.render(info_text, True, TEXT_COLOR)
         screen.blit(info_surf, (WIDTH//2 - info_surf.get_width()//2, 100))
 
@@ -177,5 +202,52 @@ def main():
 
     pygame.quit()
 
+def show_menu():
+    clock = pygame.time.Clock()
+    selected_level = None
+    
+    while selected_level is None:
+        screen.fill(BG_COLOR)
+        
+        # Title
+        title_surf = font_title.render("MEMORY MASTER", True, HIGHLIGHT)
+        screen.blit(title_surf, (WIDTH//2 - title_surf.get_width()//2, 100))
+        
+        # Instructions
+        instr_surf = font_main.render("Select Difficulty Level:", True, TEXT_COLOR)
+        screen.blit(instr_surf, (WIDTH//2 - instr_surf.get_width()//2, 200))
+        
+        # Levels
+        levels = [
+            ("1 - Easy (4 Colors)", 'easy'),
+            ("2 - Medium (6 Colors)", 'medium'),
+            ("3 - Hard (8 Colors)", 'hard')
+        ]
+        
+        for i, (text, level) in enumerate(levels):
+            color = HIGHLIGHT if i == 0 else TEXT_COLOR  # Highlight first option
+            level_surf = font_main.render(text, True, color)
+            screen.blit(level_surf, (WIDTH//2 - level_surf.get_width()//2, 280 + i * 50))
+        
+        pygame.display.flip()
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                return None
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_1:
+                    selected_level = 'easy'
+                elif event.key == pygame.K_2:
+                    selected_level = 'medium'
+                elif event.key == pygame.K_3:
+                    selected_level = 'hard'
+        
+        clock.tick(60)
+    
+    return selected_level
+
 if __name__ == "__main__":
-    main()
+    level = show_menu()
+    if level:
+        main(level)
