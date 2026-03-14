@@ -71,8 +71,8 @@ class ColorButton(Button):
         elif self._is_hover:
             # More obvious hover effect: brighter border + slight scale
             color = tuple(min(255, c + 30) for c in color)
-            border_color = (140, 200, 255)
-            border_width = 6
+            border_color = (255, 240, 255)
+            border_width = 8
 
         pygame.draw.rect(surface, color, draw_rect, border_radius=24)
         pygame.draw.rect(surface, border_color, draw_rect, border_width, border_radius=24)
