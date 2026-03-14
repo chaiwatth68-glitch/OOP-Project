@@ -25,7 +25,7 @@ BRIGHT = {
 
 # Speed values are in milliseconds (ms). This keeps timing consistent even if FPS fluctuates.
 DIFFICULTY_CONFIG = {
-    "Easy": {"colors": ["red", "green", "blue", "yellow"], "grid": (2, 2), "speed": (1200, 400)},
+    "Easy": {"colors": ["red", "green", "blue", "yellow"], "grid": (2, 2), "speed": (1000, 350)},
     "Medium": {"colors": ["red", "green", "blue", "yellow", "purple", "cyan"], "grid": (3, 2), "speed": (1000, 350)},
     "Hard": {"colors": ["red", "green", "blue", "yellow", "purple", "cyan", "orange", "white"], "grid": (4, 2), "speed": (800, 300)}
 }
