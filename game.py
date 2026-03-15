@@ -1,17 +1,33 @@
-# game.py - Main Memory game logic
-
 import random
 import pygame
+from abc import ABC, abstractmethod
 from constants import WIDTH, HEIGHT, DIFFICULTY_CONFIG, MAX_STAGES, TEXT_COLOR, HIGHLIGHT_COLOR, font_main, font_small
-from button import Button, ColorButton
+from button import TextButton, ColorButton
+
+class SequenceStrategy(ABC):
+    """Abstract Strategy for sequence generation (Abstraction: Strategy Pattern)."""
+    @abstractmethod
+    def generate_next(self, current_sequence, colors):
+        pass
+
+class NoRepeatStrategy(SequenceStrategy):
+    """Strategy that prevents consecutive identical colors (Polymorphism)."""
+    def generate_next(self, current_sequence, colors):
+        new_color = random.choice(colors)
+        if current_sequence:
+            while new_color == current_sequence[-1]:
+                new_color = random.choice(colors)
+        return new_color
 
 class MemoryGame:
     """Main game logic (Encapsulation: game state management)."""
-    def __init__(self, difficulty, sound_manager):
+    def __init__(self, difficulty, sound_manager, strategy=None):
         self.difficulty = difficulty
         self.sound_manager = sound_manager
+        self.strategy = strategy if strategy else NoRepeatStrategy() # Dependency Injection
         self.config = DIFFICULTY_CONFIG[difficulty]
         self.colors = self.config["colors"]
+
         self.grid_rows, self.grid_cols = self.config["grid"]
         self.ai_delay_ms, self.player_delay_ms = self.config["speed"]
 
@@ -26,7 +42,8 @@ class MemoryGame:
 
         # Create buttons (with spacing and centered grid)
         self.buttons = []
-        padding = 30
+        padding = 20
+
         grid_start_y = 210
         available_w = WIDTH - (padding * (self.grid_cols + 1))
         available_h = HEIGHT - grid_start_y - 120 - (padding * (self.grid_rows + 1))
@@ -53,14 +70,21 @@ class MemoryGame:
             self.buttons.append(ColorButton(rect, color))
 
         # Back button (always available during gameplay)
-        self.back_button = Button(pygame.Rect(20, 20, 140, 44), "BACK", color=HIGHLIGHT_COLOR)
+        from constants import HIGHLIGHT_COLOR
+        self.back_button = TextButton(pygame.Rect(20, 20, 140, 44), "BACK", bg_color=HIGHLIGHT_COLOR)
 
         self._start_new_round()
 
+
     def _start_new_round(self):
         self.stage += 1
-        self.sequence.append(random.choice(self.colors))
+        
+        # ใช้ Strategy Pattern ในการเจเนเรทลำดับสี
+        new_color = self.strategy.generate_next(self.sequence, self.colors)
+        self.sequence.append(new_color)
+
         self.player_input = []
+
         self.state = "showing"
         self.show_index = 0
         # Add a short delay before AI starts showing the sequence
