@@ -1,9 +1,10 @@
 # button.py - Button classes for the game
 
 import pygame
+from abc import ABC, abstractmethod
 from constants import COLORS, BRIGHT, HIGHLIGHT_COLOR, TEXT_COLOR, font_main
 
-class Button:
+class Button(ABC):
     """Abstract base class for buttons (Abstraction: common button behavior)."""
     def __init__(self, rect, text="", color=TEXT_COLOR):
         self.rect = rect
@@ -20,10 +21,25 @@ class Button:
     def is_clicked(self, event):
         return event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and self.rect.collidepoint(event.pos)
 
+    @abstractmethod
     def draw(self, surface):
-        # Polymorphism: subclasses can override
-        pygame.draw.rect(surface, self.color, self.rect, border_radius=10)
+        """Polymorphism: subclasses must override this method."""
+        pass
+
+class TextButton(Button):
+    """Standard button with text and rectangle background."""
+    def __init__(self, rect, text="", color=TEXT_COLOR, bg_color=(30, 30, 50)):
+        super().__init__(rect, text, color)
+        self.bg_color = bg_color
+
+    def draw(self, surface):
+        # Specific draw for text buttons
+        color = HIGHLIGHT_COLOR if self._hovered else self.bg_color
+        pygame.draw.rect(surface, color, self.rect, border_radius=12)
+        pygame.draw.rect(surface, (100, 100, 120), self.rect, 2, border_radius=12) # Border
+        
         if self.text:
+            # Render text
             txt_surf = font_main.render(self.text, True, TEXT_COLOR)
             surface.blit(txt_surf, (self.rect.centerx - txt_surf.get_width()//2, self.rect.centery - txt_surf.get_height()//2))
 
@@ -69,7 +85,6 @@ class ColorButton(Button):
             border_color = (200, 220, 255)
             border_width = 4
         elif self._is_hover:
-            # More obvious hover effect: brighter border + slight scale
             color = tuple(min(255, c + 30) for c in color)
             border_color = (255, 240, 255)
             border_width = 8

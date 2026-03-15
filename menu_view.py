@@ -12,9 +12,6 @@ class MenuView:
         title = font_main.render("SELECT DIFFICULTY", True, TEXT_COLOR)
         surface.blit(title, (WIDTH//2 - title.get_width()//2, 200))
 
-        for i, opt in enumerate(menu.options):
-            rect = pygame.Rect(WIDTH//2 - 150, 350 + i * 120, 300, 80)
-            color = HIGHLIGHT_COLOR if rect.collidepoint(pygame.mouse.get_pos()) else TEXT_COLOR
-            pygame.draw.rect(surface, color, rect, 4, border_radius=15)
-            txt = font_main.render(opt, True, color)
-            surface.blit(txt, (rect.centerx - txt.get_width()//2, rect.centery - txt.get_height()//2))
+        # Draw buttons
+        for button in menu.buttons:
+            button.draw(surface)

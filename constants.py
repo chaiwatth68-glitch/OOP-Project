@@ -12,19 +12,23 @@ FAIL_COLOR = (255, 107, 107)  # Coral Red
 # Expanded Simon Colors
 COLORS = {
     "red": (180, 40, 40), "green": (40, 150, 40), "blue": (40, 40, 180), "yellow": (180, 180, 40),
-    "purple": (150, 40, 150), "cyan": (40, 150, 150), "orange": (180, 100, 40), "white": (180, 180, 180)
+    "purple": (150, 40, 150), "cyan": (40, 150, 150), "orange": (180, 100, 40), "white": (180, 180, 180),
+    "pink": (200, 60, 120)
 }
 BRIGHT = {
     "red": (255, 80, 80), "green": (80, 255, 80), "blue": (80, 80, 255), "yellow": (255, 255, 120),
-    "purple": (220, 100, 220), "cyan": (100, 255, 255), "orange": (255, 180, 80), "white": (255, 255, 255)
+    "purple": (220, 100, 220), "cyan": (100, 255, 255), "orange": (255, 180, 80), "white": (255, 255, 255),
+    "pink": (255, 130, 180)
 }
 
 # Speed values are in milliseconds (ms). This keeps timing consistent even if FPS fluctuates.
 DIFFICULTY_CONFIG = {
     "Easy": {"colors": ["red", "green", "blue", "yellow"], "grid": (2, 2), "speed": (1000, 350)},
-    "Medium": {"colors": ["red", "green", "blue", "yellow", "purple", "cyan"], "grid": (3, 2), "speed": (1000, 350)},
-    "Hard": {"colors": ["red", "green", "blue", "yellow", "purple", "cyan", "orange", "white"], "grid": (4, 2), "speed": (800, 300)}
+    "Medium": {"colors": ["red", "green", "blue", "yellow", "purple", "cyan"], "grid": (2, 3), "speed": (1000, 350)},
+    "Hard": {"colors": ["red", "green", "blue", "yellow", "purple", "cyan", "orange", "white", "pink"], "grid": (3, 3), "speed": (800, 300)}
 }
+
+
 
 MAX_STAGES = 10
 
