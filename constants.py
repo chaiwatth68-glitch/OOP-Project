@@ -35,7 +35,7 @@ MAX_STAGES = 10
 # Initialize Pygame components
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("✨ Premium Simon Says")
+pygame.display.set_caption("✨ Premium Memory Game")
 
 # Typography
 try:

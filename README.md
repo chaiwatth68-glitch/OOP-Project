@@ -1,6 +1,6 @@
-# ✨ Premium Simon Says
+# ✨ Premium Memory Game
 
-สะกดรอยตามเสียงและแสงสว่าง! เกม **Simon Says** แบบคลาสสิกที่ถูกพัฒนาขึ้นใหม่ด้วย **Python** และ **Pygame** ในรูปแบบพรีเมียม ตอบสนองเร็วทันใจ (Fast Responsive) และจัดระเบียบโค้ดตามสถาปัตยกรรม OOP และ SOLID Principles 
+สะกดรอยตามเสียงและแสงสว่าง! เกม **Memory Game** แบบคลาสสิกที่ถูกพัฒนาขึ้นใหม่ด้วย **Python** และ **Pygame** ในรูปแบบพรีเมียม ตอบสนองเร็วทันใจ (Fast Responsive) และจัดระเบียบโค้ดตามสถาปัตยกรรม OOP และ SOLID Principles 
 
 ---
 

@@ -2,14 +2,17 @@ import pygame
 from constants import WIDTH, HEIGHT, TEXT_COLOR, HIGHLIGHT_COLOR, font_main, font_small, MAX_STAGES
 
 class GameView:
-    """Handles rendering for the SimonGame (Single Responsibility: View)."""
+    """Handles rendering for the MemoryGame (Single Responsibility: View)."""
     def draw(self, surface, game):
         # Draw title and status
-        title = font_main.render("SIMON SAYS", True, HIGHLIGHT_COLOR)
+        title = font_main.render("MEMORY GAME", True, HIGHLIGHT_COLOR)
         surface.blit(title, (WIDTH//2 - title.get_width()//2, 20))
 
         status = font_small.render(f"Stage: {game.stage}/{MAX_STAGES}  |  {game.difficulty}", True, TEXT_COLOR)
         surface.blit(status, (WIDTH//2 - status.get_width()//2, 70))
+
+        # Draw back button (always available)
+        game.back_button.draw(surface)
 
         # Draw buttons
         for button in game.buttons:

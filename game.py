@@ -1,11 +1,11 @@
-# game.py - Main Simon game logic
+# game.py - Main Memory game logic
 
 import random
 import pygame
 from constants import WIDTH, HEIGHT, DIFFICULTY_CONFIG, MAX_STAGES, TEXT_COLOR, HIGHLIGHT_COLOR, font_main, font_small
-from button import ColorButton
+from button import Button, ColorButton
 
-class SimonGame:
+class MemoryGame:
     """Main game logic (Encapsulation: game state management)."""
     def __init__(self, difficulty, sound_manager):
         self.difficulty = difficulty
@@ -52,6 +52,9 @@ class SimonGame:
             rect = pygame.Rect(x, y, button_size, button_size)
             self.buttons.append(ColorButton(rect, color))
 
+        # Back button (always available during gameplay)
+        self.back_button = Button(pygame.Rect(20, 20, 140, 44), "BACK", color=HIGHLIGHT_COLOR)
+
         self._start_new_round()
 
     def _start_new_round(self):
@@ -68,6 +71,12 @@ class SimonGame:
     def update(self, mouse_pos, events):
         for button in self.buttons:
             button.update_hover(mouse_pos)
+        self.back_button.update_hover(mouse_pos)
+
+        # Back button is always available during gameplay
+        for event in events:
+            if self.back_button.is_clicked(event):
+                return "menu"
 
         # Handle Win/Lose Popups
         if self.state in ["won", "failed"]:
