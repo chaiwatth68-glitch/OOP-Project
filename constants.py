@@ -2,10 +2,6 @@
 
 import pygame
 
-# Window settings
-WIDTH, HEIGHT = 600, 900
-FPS = 60
-
 # Colors (Premium Palette)
 BG_COLOR = (15, 15, 26)       # Deep Dark Blue
 TEXT_COLOR = (240, 240, 255)
@@ -34,15 +30,21 @@ MAX_STAGES = 10
 
 # Initialize Pygame components
 pygame.init()
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
+
+# Get desktop size for fullscreen
+desktop_size = pygame.display.get_desktop_sizes()[0]
+WIDTH, HEIGHT = desktop_size
+FPS = 60
+
+screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
 pygame.display.set_caption("✨ Premium Memory Game")
 
 # Typography
 try:
-    font_main = pygame.font.SysFont("Outfit", 32)
-    font_title = pygame.font.SysFont("Outfit", 48, bold=True)
-    font_small = pygame.font.SysFont("Outfit", 20)
+    font_main = pygame.font.SysFont("Outfit", 48)
+    font_title = pygame.font.SysFont("Outfit", 72, bold=True)
+    font_small = pygame.font.SysFont("Outfit", 30)
 except:
-    font_main = pygame.font.SysFont("Arial", 32)
-    font_title = pygame.font.SysFont("Arial", 48, bold=True)
-    font_small = pygame.font.SysFont("Arial", 20)
+    font_main = pygame.font.SysFont("Arial", 48)
+    font_title = pygame.font.SysFont("Arial", 72, bold=True)
+    font_small = pygame.font.SysFont("Arial", 30)

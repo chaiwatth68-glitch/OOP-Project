@@ -12,11 +12,11 @@ class Menu:
     def update(self, mouse_pos, events):
         self.selected = None
         for i, opt in enumerate(self.options):
-            rect = pygame.Rect(WIDTH//2 - 100, 320 + i * 80, 200, 50)
+            rect = pygame.Rect(WIDTH//2 - 150, 350 + i * 120, 300, 80)
             if rect.collidepoint(mouse_pos):
                 for event in events:
                     if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                         self.selected = opt
                         break
                 break
-
+
